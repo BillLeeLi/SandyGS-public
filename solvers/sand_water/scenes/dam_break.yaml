@@ -1,0 +1,35 @@
+# M6：无沙单层水坝溃决，用于复核旧 M1 行为和视频流水线。
+name: dam_break
+
+grid:
+  resolution: [72, 40]
+  spacing: 0.025
+  boundary_width: 1
+
+physics:
+  gravity: 9.81
+  diffusion_rate: 0.0
+  momentum_exchange_rate: 0.0
+  ground_friction: 0.0
+  enable_sand_internal_force: false
+
+time:
+  water_dt: 0.004
+  sand_substeps: 1
+  adaptive: true
+  target_cfl: 0.45
+
+initial:
+  terrain: 0.0
+  sand: 0.0
+  total_water:
+    type: box
+    min: [-0.82, -0.42]
+    max: [-0.18, 0.42]
+    height: 0.30
+
+run:
+  steps: 180
+  frame_stride: 6
+  diagnostic_snapshots: false
+  write_obj: true

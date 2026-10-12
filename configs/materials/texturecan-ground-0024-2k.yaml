@@ -1,0 +1,36 @@
+# T4.1 reusable material fragment. Merge these flat keys into a complete
+# sand-water render config; this file is not a standalone scene/run profile.
+sand_texture_enabled: true
+sand_texture_material: texturecan_ground_0024_2k
+sand_texture_material_mode: perturbation
+sand_texture_root: ${SANDYGS_DATA_ROOT}/materials/sand/texturecan/ground_0024_2k/runtime
+sand_texture_projection: simulation_xy
+sand_texture_triplanar_sharpness: 4.0
+sand_texture_phase_mode: world_locked
+
+# Garden is not metrically calibrated. This period is an initial visual scale
+# in simulation coordinates and must be reviewed in the first multiview A/B.
+sand_texture_period_sim: 0.10
+sand_texture_rotation_degrees: 0.0
+sand_texture_offset: [0.0, 0.0]
+
+# Preserve the existing wetness-driven macro material; texture maps contribute
+# only bounded zero-mean detail around it.
+sand_texture_albedo_strength: 0.35
+sand_texture_roughness_strength: 0.20
+sand_texture_normal_strength: 0.50
+sand_texture_ao_enabled: false
+sand_texture_ao_highpass_sigma_texels: 8.0
+sand_texture_ao_response: linear
+sand_texture_ao_strength: 1.0
+sand_texture_ao_min: 0.4
+sand_texture_ao_sparse_low: 0.04
+sand_texture_ao_sparse_high: 0.08
+sand_texture_ao_sparse_contrast: 0.40
+sand_texture_albedo_detail_min: 0.50
+sand_texture_albedo_detail_max: 1.50
+sand_texture_roughness_min: 0.08
+sand_texture_roughness_max: 1.0
+sand_texture_lod_bias: 0.0
+
+sand_texture_diagnostics: false

@@ -1,0 +1,7 @@
+# Licensing
+
+SandyGS-specific original code and contributions for which the SandyGS contributors hold the necessary rights are offered under the [PolyForm Noncommercial License 1.0.0](LICENSES/POLYFORM-NONCOMMERCIAL-1.0.0.txt). This includes the project's sand-water simulation, scene editing, and rendering additions to the extent those additions are separately licensable. The same project license is used for these contributions without dividing them by contributor.
+
+This repository also contains third-party code and modified third-party code. The PolyForm grant does **not** relicense those upstream portions or remove their original terms. In a mixed-source file, both the applicable upstream terms and the terms for SandyGS-owned contributions must be considered. PGSR-based modifications remain subject to PGSR's license, including its requirements for modifications. The 3D Gaussian Splatting code and its derivatives remain subject to the Inria/MPII license. The `scene/NVDIFFREC/` code, including local modifications, remains under the NVIDIA nvdiffrec license. Other bundled components retain the terms listed in [THIRD_PARTY.md](THIRD_PARTY.md) and their own license files and source notices.
+
+The license text for SandyGS contributions is included in `LICENSES/`. Copies of upstream licenses are included in `THIRD_PARTY_LICENSES/` or alongside their components. This repository is publicly available source with noncommercial restrictions; it is not offered as a single-license distribution.

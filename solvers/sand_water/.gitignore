@@ -1,0 +1,11 @@
+build
+
+.xmake
+.vs
+.vscode
+vsxmake*
+compile_commands.json
+
+**.pdf
+results/
+__pycache__/

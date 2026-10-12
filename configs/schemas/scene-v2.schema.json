@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sandygs.local/schemas/scene-v2.schema.json",
+  "title": "SandyGS portable scene configuration v2",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schema_version", "scene_id", "paths", "renderer"],
+  "properties": {
+    "schema_version": {"const": 2},
+    "scene_id": {"type": "string", "minLength": 1},
+    "rainygs_arguments": false,
+    "paths": {
+      "type": "object",
+      "minProperties": 1,
+      "not": {"required": ["fluid_frames"]},
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["root", "path"],
+        "properties": {
+          "root": {"type": "string", "minLength": 1},
+          "path": {"type": "string", "minLength": 1},
+          "kind": {"enum": ["file", "directory", "any"]},
+          "required": {"type": "boolean"}
+        }
+      }
+    },
+    "renderer": {
+      "type": "object",
+      "not": {
+        "anyOf": [
+          {"required": ["fluid_root"]},
+          {"required": ["src_height_map_path"]},
+          {"required": ["src_height_map_high_path"]},
+          {"required": ["time_duration_raindrop"]},
+          {"required": ["interval_dis_raindrop"]},
+          {"required": ["diffuse_raindrop"]},
+          {"required": ["opacity_raindrop"]},
+          {"required": ["scale_raindrop"]},
+          {"required": ["roughness_raindrop"]},
+          {"required": ["specular_raindrop"]},
+          {"required": ["diffuse_moisture"]},
+          {"required": ["opacity_moisture"]},
+          {"required": ["scale_moisture"]},
+          {"required": ["roughness_moisture"]},
+          {"required": ["specular_moisture"]},
+          {"required": ["diffuse_rainsplash"]},
+          {"required": ["opacity_rainsplash"]},
+          {"required": ["scale_rainsplash"]},
+          {"required": ["roughness_rainsplash"]},
+          {"required": ["specular_rainsplash"]}
+        ]
+      }
+    }
+  }
+}

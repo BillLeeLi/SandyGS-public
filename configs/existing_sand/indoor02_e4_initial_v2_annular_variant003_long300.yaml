@@ -1,0 +1,69 @@
+schema_version: 1
+scene_id: indoor02
+
+# Three-second run promoted from the completed 1.25 s variant003 probe. Preserve the
+# reviewed sand, v2 constitutive parameters, dry island and upstream footprint;
+# only reduce the surrounding water level and upstream head.
+profile:
+  schema_version: 1
+  profile_id: indoor02-e4-initial-v2-annular-variant003-long300
+  initial:
+    sand: {exchange_field: sand_height}
+  physics:
+    gravity: 9.81
+    diffusion_rate: 0.0
+    momentum_exchange_rate: 1.0
+    ground_friction: 0.42
+    young_modulus: 75000.0
+    poisson: 0.25
+    drucker_prager_friction: 0.5
+    cohesion:
+      c0: 800.0
+      c1: 2000.0
+      c2: 2000.0
+      phi1: 0.20
+      phi2: 0.25
+      phi3: 0.33
+    enable_sand_internal_force: true
+  exchange_scheme: paper
+  solver:
+    water_dt: 0.001
+    sand_substeps: 3
+    steps: 1
+    duration_seconds: 3.0
+    frame_stride: 10
+    target_cfl: 0.45
+    internal_force_height_fraction: 0.0004
+    snapshot_level: render
+
+# Variant003 changes only the two reviewed water levels:
+# - circular-island exterior: 0.12 -> 0.10
+# - right-side upstream head: 0.24 -> 0.18
+# The wet footprint and transition widths are identical to variant002.
+water_patch:
+  combine: max
+  shapes:
+    - combine: subtract
+      shapes:
+        - 0.10
+        - type: cylinder
+          center: [0.3775, -0.425]
+          radius: 0.66
+          edge_width: 0.025
+          height: 0.10
+    - combine: subtract
+      shapes:
+        - type: box
+          min: [0.92, -1.15]
+          max: [1.20, 0.35]
+          edge_width: 0.03
+          height: 0.18
+        - type: cylinder
+          center: [0.3775, -0.425]
+          radius: 0.66
+          edge_width: 0.025
+          height: 0.18
+
+water_patch_validation:
+  boundary_cells: 0
+  alpha_min: 0.98

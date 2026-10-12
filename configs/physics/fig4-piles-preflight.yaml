@@ -1,0 +1,250 @@
+schema_version: 1
+experiment_id: fig4-piles-saturation
+
+# This benchmark is intentionally independent of Garden, PGSR and 3DGS.  The
+# CPU solver receives an analytic flat plane and a single sand cylinder; the
+# preview renderer consumes the resulting height fields directly.
+solver_scene:
+  name: fig4_piles_preflight
+
+  grid:
+    # Keep dx=0.015 (about 20 cells across the pile radius), while leaving a
+    # wider physical apron for the highly saturated range case. A 128^2 range
+    # probe showed conservation-scale sand reaching its half-width 0.9375
+    # boundary at t=0.375 s, so 160^2 is the minimum accepted domain here.
+    resolution: [160, 160]
+    spacing: 0.015
+    boundary_width: 1
+    center: [0.0, 0.0]
+
+  # Current reconstruction-regression behavior as of the pre-refactor
+  # baseline. These values are not asserted to be the final paper parameters.
+  # Freeze the complete resolved config before structural code changes.
+  physics:
+    gravity: 9.81
+    diffusion_rate: 0.0
+    momentum_exchange_rate: 1.0
+    ground_friction: 0.42
+    sand_terrain_contact_tolerance: 0.0
+    young_modulus: 75000.0
+    poisson: 0.25
+    drucker_prager_friction: 0.45
+    cohesion:
+      c0: 400.0
+      c1: 2000.0
+      c2: 2500.0
+      phi1: 0.20
+      phi2: 0.25
+      phi3: 0.33
+    enable_sand_internal_force: true
+
+  time:
+    water_dt: 0.0025
+    sand_substeps: 3
+    adaptive: true
+    target_cfl: 0.45
+    internal_force_height_fraction: 0.0004
+
+  exchange_scheme: paper
+
+  initial:
+    terrain:
+      type: plane
+      height: 0.0
+      slope: [0.0, 0.0]
+    sand:
+      type: cylinder
+      center: [0.0, 0.0]
+      radius: 0.30
+      height: 0.21
+      # About 2.7 cells of smoothstep transition avoid making the first dynamic test
+      # primarily a hard-discontinuity stress test. Geometry is not smoothed by
+      # the renderer itself.
+      edge_width: 0.04
+    # The experiment runner expands this into
+    # total_water = phi / (1 - phi) * sand before launching the baseline solver.
+    # phi=0.25 is representative for checking the initial geometry; every sweep
+    # member has the same visible sand surface at t=0.
+    saturation: 0.25
+
+  # Preflight protection: the tracked configuration cannot advance physics.
+  # The later accepted sweep will use a separate configuration/run phase.
+  run:
+    steps: 0
+    frame_stride: 1
+    diagnostic_snapshots: false
+    write_obj: false
+
+experiment:
+  # Exact saturation values shown in Fig. 4 of the source paper. They are
+  # recorded now but are not simulated by the initial-frame preflight.
+  paper_saturations: [0.00, 0.03, 0.07, 0.25, 0.30, 0.32, 0.35, 0.45]
+  artifact_subdirectory: comparisons/physics/fig4_piles
+
+# Phase overrides are deep-merged into the common configuration above. Tests
+# compare complete resolved mappings so an override cannot silently change an
+# unrelated material, grid, timing, or initialization field.
+phases:
+  preflight: {}
+  range:
+    solver_scene:
+      name: fig4_piles_range_phi045
+      initial:
+        saturation: 0.45
+      run:
+        duration: 0.5
+        frame_stride: 10
+    render:
+      # Show almost the full interior domain during range discovery. The final
+      # sweep will freeze a tighter common crop from the measured envelope.
+      crop_half_extent: 1.10
+  # Temporal-convergence control: halve the maximum outer/water step while
+  # doubling the snapshot stride. Both range runs therefore save the same
+  # physical timestamps (0.000, 0.025, ..., 0.500 s).
+  range_half_dt:
+    solver_scene:
+      name: fig4_piles_range_phi045_half_dt
+      time:
+        water_dt: 0.00125
+      initial:
+        saturation: 0.45
+      run:
+        duration: 0.5
+        frame_stride: 20
+    render:
+      crop_half_extent: 1.10
+  # Historical sensitivity control. This originally compared a 0.30 base
+  # friction against 0.42, but the current base is itself 0.42, so this phase
+  # no longer forms a valid friction A/B. Keep it only to interpret archived
+  # runs; create explicit 0.30 and 0.42 phases for any future sensitivity study.
+  range_friction_042:
+    lifecycle:
+      status: historical
+      reason: current base ground_friction is already 0.42
+    solver_scene:
+      name: fig4_piles_range_phi045_friction_042
+      physics:
+        ground_friction: 0.42
+      initial:
+        saturation: 0.45
+      run:
+        duration: 0.5
+        frame_stride: 10
+    render:
+      crop_half_extent: 1.10
+  # Accepted eight-saturation experiment. Preserve dx and the material
+  # baseline, but enlarge the numerical apron for the 2 s over-saturated run.
+  # The batch entry point overrides only initial.saturation for each member.
+  sweep:
+    solver_scene:
+      name: fig4_piles_sweep
+      grid:
+        resolution: [224, 224]
+      run:
+        duration: 2.0
+        # 0.05 s between snapshots: enough for final-pose and stability review
+        # without producing unnecessarily dense height-field artifacts.
+        frame_stride: 20
+    render:
+      crop_half_extent: 1.50
+
+  # M5 coupling sensitivity: these three phases intentionally differ only in
+  # c_e.  One physical second is sufficient because the problematic
+  # phi=0.30/0.32 piles were already nearly stationary by that time, while the
+  # saved solver fields still expose the earlier pure/mixed-water separation.
+  exchange_sensitivity_1:
+    solver_scene:
+      name: fig4_piles_exchange_ce1
+      grid:
+        resolution: [224, 224]
+      physics:
+        momentum_exchange_rate: 1.0
+      run:
+        duration: 1.0
+        frame_stride: 20
+    render:
+      crop_half_extent: 1.50
+  exchange_sensitivity_1000:
+    solver_scene:
+      name: fig4_piles_exchange_ce1000
+      grid:
+        resolution: [224, 224]
+      physics:
+        momentum_exchange_rate: 1000.0
+      run:
+        duration: 1.0
+        frame_stride: 20
+    render:
+      crop_half_extent: 1.50
+  exchange_sensitivity_5000:
+    solver_scene:
+      name: fig4_piles_exchange_ce5000
+      grid:
+        resolution: [224, 224]
+      physics:
+        momentum_exchange_rate: 5000.0
+      run:
+        duration: 1.0
+        frame_stride: 20
+    render:
+      crop_half_extent: 1.50
+
+  # Spatial-convergence diagnostic. Halving dx while doubling both grid
+  # dimensions preserves the 3.36 x 3.36 physical domain and every physical
+  # material/initialization parameter. Adaptive stepping is intentionally kept
+  # enabled, so the elastic/CFL bound can reduce the actual dt at finer dx.
+  # Snapshots are sparse because a full 448^2 triangulated preview is relatively
+  # memory-heavy; metrics.csv still records every solver step.
+  spatial_convergence_half_dx:
+    solver_scene:
+      name: fig4_piles_spatial_convergence_dx0075
+      grid:
+        resolution: [448, 448]
+        spacing: 0.0075
+      physics:
+        momentum_exchange_rate: 1.0
+      run:
+        duration: 1.0
+        frame_stride: 400
+    render:
+      crop_half_extent: 1.50
+
+  # Constitutive isolation diagnostic. Mixed water is transported with exactly
+  # the same finite-volume carrier flux as sand, while the independent shallow-
+  # water, diffusion, layer-transfer and momentum-exchange stages are skipped.
+  # This phase is deliberately separate: the default physics mode remains the
+  # full dynamic two-water-layer solver used by every production experiment.
+  frozen_saturation:
+    solver_scene:
+      name: fig4_piles_frozen_bound_saturation
+      grid:
+        resolution: [224, 224]
+      physics:
+        saturation_mode: frozen_bound
+      run:
+        duration: 1.0
+        frame_stride: 20
+    render:
+      crop_half_extent: 1.50
+
+render:
+  # Crop around the pile rather than showing the entire numerical boundary.
+  crop_half_extent: 0.58
+  sand_epsilon: 1.0e-8
+  # Ignore conservation-scale wisps below this height when recommending the
+  # final common crop, while still reporting their full numerical support.
+  range_height_threshold: 0.001
+  sand_color: [0.76, 0.53, 0.27]
+  ground_color: [0.74, 0.75, 0.73]
+  background_color: [0.96, 0.97, 0.98]
+  light_direction: [-0.45, -0.55, 1.0]
+  ambient_strength: 0.38
+  diffuse_strength: 0.62
+  dpi: 150
+  views:
+    - name: oblique
+      elevation: 30.0
+      azimuth: -55.0
+    - name: low_side
+      elevation: 17.0
+      azimuth: -90.0

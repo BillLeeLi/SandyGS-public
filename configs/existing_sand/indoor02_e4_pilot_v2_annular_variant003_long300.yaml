@@ -1,0 +1,13 @@
+schema_version: 1
+scene_id: indoor02
+initialization_stage_id: e4_exchange_initial_v2_annular_variant003_long300_001
+experiment_id: e4_water_pilot_v2_annular_variant003_long300_001
+
+# Three-second run with the exact variant003 probe initial field and physics.
+solver:
+  duration_seconds: 3.0
+  frame_stride: 10
+  snapshot_level: render
+  write_obj: false
+
+cases: [water]

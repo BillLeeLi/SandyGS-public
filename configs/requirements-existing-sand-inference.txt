@@ -1,0 +1,9 @@
+# Install in a venv layered on the existing sandygs Conda environment.
+# The venv reuses its PyTorch/CUDA, NumPy, OpenCV and plotting packages.
+# InFusion's UNet config was saved with Diffusers 0.25.1. Newer hub releases
+# removed cached_download, which that Diffusers release still imports.
+diffusers==0.25.1
+transformers==4.37.2
+huggingface_hub==0.25.2
+accelerate==0.27.2
+safetensors==0.4.5

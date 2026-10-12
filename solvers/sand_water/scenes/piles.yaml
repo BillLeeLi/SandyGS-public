@@ -1,0 +1,56 @@
+# M6：多个沙堆的可重复本构/OBJ 验收场景。
+name: piles
+
+grid:
+  resolution: [64, 48]
+  spacing: 0.025
+  boundary_width: 1
+  center: [0.0, 0.0]
+
+physics:
+  gravity: 9.81
+  diffusion_rate: 0.0
+  momentum_exchange_rate: 1.0
+  ground_friction: 0.42
+  young_modulus: 75000
+  poisson: 0.25
+  drucker_prager_friction: 0.5
+  enable_sand_internal_force: true
+
+time:
+  water_dt: 0.003
+  sand_substeps: 3
+  adaptive: true
+  target_cfl: 0.5
+  internal_force_height_fraction: 0.0004
+
+exchange_scheme: paper
+
+initial:
+  terrain:
+    type: plane
+    height: 0.0
+    slope: [0.0, 0.0]
+  sand:
+    combine: max
+    shapes:
+      - type: gaussian
+        center: [-0.38, -0.12]
+        sigma: 0.105
+        height: 0.30
+      - type: cylinder
+        center: [0.0, 0.16]
+        radius: 0.13
+        height: 0.28
+        edge_width: 0.025
+      - type: gaussian
+        center: [0.36, -0.10]
+        sigma: 0.09
+        height: 0.24
+  total_water: 0.0
+
+run:
+  steps: 160
+  frame_stride: 10
+  diagnostic_snapshots: true
+  write_obj: true

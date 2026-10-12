@@ -1,0 +1,26 @@
+schema_version: 1
+scene_id: mipnerf360-garden
+profile_id: p2-pure-water-two-frame
+
+# This sequence keeps the same absolute initial level as P0. A larger outer
+# step than the single-frame smoke keeps the saved run compact; adaptive CFL
+# logic may still shorten a step if the evolving velocity requires it.
+initial_surface_level: 1.3
+
+solver:
+  water_dt: 0.005
+  # Fixed physical duration is required because adaptive CFL makes the number
+  # of executed steps scene-dependent. "steps" remains a harmless fallback.
+  steps: 1
+  duration_seconds: 0.04
+  frame_stride: 5
+  target_cfl: 0.45
+  snapshot_level: render
+
+render:
+  # Two 30 fps video frames sample t=0 and t=1/30. The second time lies
+  # between saved solver snapshots and therefore exercises interpolation.
+  frame_time_seconds: 0.0
+  fps: 30.0
+  free_water_epsilon: 1.0e-6
+  water_rendering_backend: sandygs_p4

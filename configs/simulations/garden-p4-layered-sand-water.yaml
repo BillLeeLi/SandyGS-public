@@ -1,0 +1,121 @@
+schema_version: 1
+scene_id: mipnerf360-garden
+profile_id: p4-layered-sand-water
+
+initial:
+  # Keep the terrain-aware absolute top-surface initialization fixed while
+  # adding enough water to fill the sand pores and leave a visible free layer.
+  sand_surface:
+    type: gaussian
+    center: [0.0, -1.0]
+    sigma: 1.50
+    height: 1.65
+  saturation: 0.60
+
+physics:
+  gravity: 9.81
+  diffusion_rate: 0.0
+  momentum_exchange_rate: 1.0
+  ground_friction: 0.42
+  young_modulus: 75000.0
+  poisson: 0.25
+  drucker_prager_friction: 0.5
+  enable_sand_internal_force: true
+
+exchange_scheme: paper
+
+solver:
+  water_dt: 0.0025
+  sand_substeps: 3
+  steps: 1
+  duration_seconds: 0.04
+  frame_stride: 5
+  target_cfl: 0.45
+  internal_force_height_fraction: 0.0004
+  snapshot_level: render
+
+render:
+  frame_time_seconds: 0.0
+  fps: 30.0
+  free_water_epsilon: 1.0e-6
+  sand_epsilon: 1.0e-5
+  render_layered_water: true
+  water_rendering_backend: sandygs_p4
+
+  sand_coverage_factor: 0.55
+  sand_normal_thickness_ratio: 0.10
+  sand_max_tangent_scale_ratio: 4.0
+  sand_full_coverage_height: 0.015
+  sand_opacity: 0.995
+  sand_coverage_alpha_low: 0.02
+  sand_coverage_alpha_high: 0.80
+  sand_source_alpha_min: 0.01
+  sand_depth_bias: 0.002
+  sand_depth_softness: 0.005
+  sand_save_debug_maps: true
+  sand_validate_gbuffer: true
+
+  # P4 wetness is mixed-water/sand (pore water), never the free-water layer.
+  # P3's historical sand_saturation_* names remain accepted as fallbacks.
+  sand_dry_color: [194, 154, 96]
+  sand_wet_color: [112, 82, 52]
+  sand_mixed_water_wetness_dry: 0.0
+  sand_mixed_water_wetness_wet: 0.5
+  sand_dry_roughness: 0.90
+  sand_wet_roughness: 0.45
+  sand_dry_specular: 0.04
+  sand_wet_specular: 0.18
+  sand_exposure: 1.0
+  sand_ambient: 0.18
+  sand_environment_weight: 0.25
+  sand_environment_min: 0.35
+  sand_environment_max: 1.75
+  sand_light_direction_sim: [-0.60, -0.50, 0.45]
+
+  # Water Gaussians produce geometry/coverage only. The optical material is
+  # evaluated after rasterization in linear RGB.
+  water_coverage_alpha_low: 0.02
+  water_coverage_alpha_high: 0.80
+  water_alpha_min: 0.02
+  water_depth_bias: 0.002
+  water_validate_gbuffer: true
+  # Use a strong reflection floor. The SSR radiance
+  # is Gaussian-filtered before Fresnel composition, so the higher floor makes
+  # near-normal tree/table reflections visible without restoring raw DDA noise.
+  water_f0: 0.50
+  water_roughness: 0.05
+  water_ssr_ray_length: 500.0
+  water_ssr_thickness: 0.03
+  water_ssr_start_step: 2
+  # A single-view G-buffer stores only the side visible to the primary camera.
+  # Reject reflection rays that reach that surface from behind, and require a
+  # signed, depth-continuous crossing before accepting a front-face SSR hit.
+  water_ssr_frontface_cos_threshold: 0.08
+  water_ssr_backface_cos_threshold: 0.08
+  # PGSR's single-layer plane depth has sub-pixel noise around curved/oblique
+  # surfaces; 0.25 / 5% keeps those crossings while still rejecting Garden's
+  # roughly 1--2 unit foreground/background jumps at the tabletop silhouette.
+  water_ssr_max_depth_jump_absolute: 0.25
+  water_ssr_max_depth_jump_relative: 0.05
+
+  # When only the wrong side is available (e.g. Garden's tabletop top instead
+  # of its unobserved underside), synthesize a dark low-frequency proxy rather
+  # than copying the clearly incorrect visible texture.
+  water_occluded_proxy_blur_radius: 12
+  water_occluded_proxy_darkness: 0.25
+  water_occluded_proxy_saturation: 0.45
+  water_occluded_proxy_environment_weight: 0.10
+  water_occluded_proxy_roughness: 0.80
+  # P4 multiplies this value by pure-water thickness. 40 gives roughly 1.4 px
+  # at h=0.035 and 4 px at h=0.10, reducing high-frequency silhouette warping.
+  water_refraction_pixels_per_unit: 40.0
+  water_optical_distance_scale: 1.0
+  water_absorption_rgb: [0.15, 0.055, 0.025]
+  water_scatter_color: [34, 86, 92]
+  # Keep a visible highlight while narrowing and weakening the aggressive
+  # highlight lobe so isolated normal errors do not become bright sparkles.
+  water_highlight_strength: 0.35
+  water_highlight_exponent: 48.0
+  # Water lighting is deliberately independent from sand so the same optical
+  # backend also supports a source-only pure-water scene.
+  water_light_direction_sim: [-0.60, -0.50, 0.45]

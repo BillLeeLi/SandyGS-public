@@ -1,0 +1,215 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sandygs.local/schemas/simulation-exchange-v1.schema.json",
+  "title": "SandyGS Simulation Exchange Format v1",
+  "type": "object",
+  "required": [
+    "protocol",
+    "format_version",
+    "scene_id",
+    "units",
+    "grid",
+    "coordinates",
+    "frames"
+  ],
+  "properties": {
+    "protocol": {
+      "const": "sandygs.simulation_exchange"
+    },
+    "format_version": {
+      "const": 1
+    },
+    "scene_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "units": {
+      "type": "object",
+      "required": [
+        "horizontal",
+        "vertical",
+        "time",
+        "meters_per_simulation_unit",
+        "scale_status",
+        "scale_source"
+      ],
+      "properties": {
+        "horizontal": {"const": "simulation_unit"},
+        "vertical": {"const": "simulation_unit"},
+        "time": {"const": "second"},
+        "meters_per_simulation_unit": {
+          "type": ["number", "null"],
+          "exclusiveMinimum": 0
+        },
+        "scale_status": {
+          "enum": ["unverified", "assumed", "measured"]
+        },
+        "scale_source": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "grid": {
+      "type": "object",
+      "required": [
+        "axis_order",
+        "resolution",
+        "domain_min",
+        "domain_max",
+        "spacing",
+        "centering",
+        "cell_center_origin",
+        "storage_order",
+        "exchange_boundary_width"
+      ],
+      "properties": {
+        "axis_order": {
+          "const": ["x", "y"]
+        },
+        "resolution": {
+          "$ref": "#/$defs/integerPair"
+        },
+        "domain_min": {
+          "$ref": "#/$defs/numberPair"
+        },
+        "domain_max": {
+          "$ref": "#/$defs/numberPair"
+        },
+        "spacing": {
+          "$ref": "#/$defs/positiveNumberPair"
+        },
+        "centering": {
+          "const": "cell"
+        },
+        "cell_center_origin": {
+          "$ref": "#/$defs/numberPair"
+        },
+        "storage_order": {
+          "const": "C"
+        },
+        "exchange_boundary_width": {
+          "const": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "coordinates": {
+      "type": "object",
+      "required": [
+        "vector_convention",
+        "handedness",
+        "height_axis",
+        "sim_to_gs",
+        "gs_to_sim"
+      ],
+      "properties": {
+        "vector_convention": {"const": "column"},
+        "handedness": {"const": "right"},
+        "height_axis": {"const": "+z"},
+        "sim_to_gs": {"$ref": "#/$defs/matrix4x4"},
+        "gs_to_sim": {"$ref": "#/$defs/matrix4x4"}
+      },
+      "additionalProperties": false
+    },
+    "frames": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "frame_index",
+          "step_index",
+          "time_seconds",
+          "fields"
+        ],
+        "properties": {
+          "frame_index": {"type": "integer", "minimum": 0},
+          "step_index": {"type": "integer", "minimum": 0},
+          "time_seconds": {"type": "number", "minimum": 0},
+          "fields": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": {
+              "$ref": "#/$defs/field"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "provenance": {
+      "type": "object"
+    },
+    "fixture_expectations": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "numberPair": {
+      "type": "array",
+      "prefixItems": [{"type": "number"}, {"type": "number"}],
+      "items": false
+    },
+    "positiveNumberPair": {
+      "type": "array",
+      "prefixItems": [
+        {"type": "number", "exclusiveMinimum": 0},
+        {"type": "number", "exclusiveMinimum": 0}
+      ],
+      "items": false
+    },
+    "integerPair": {
+      "type": "array",
+      "prefixItems": [
+        {"type": "integer", "minimum": 2},
+        {"type": "integer", "minimum": 2}
+      ],
+      "items": false
+    },
+    "matrix4x4": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "array",
+        "minItems": 4,
+        "maxItems": 4,
+        "items": {"type": "number"}
+      }
+    },
+    "field": {
+      "type": "object",
+      "required": [
+        "path",
+        "semantic",
+        "centering",
+        "dtype",
+        "shape",
+        "units",
+        "constraints",
+        "sha256"
+      ],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "semantic": {"type": "string", "minLength": 1},
+        "centering": {"const": "cell"},
+        "dtype": {"const": "float32"},
+        "shape": {"$ref": "#/$defs/integerPair"},
+        "units": {"type": "string", "minLength": 1},
+        "constraints": {
+          "type": "array",
+          "items": {"enum": ["finite", "nonnegative"]},
+          "uniqueItems": true
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

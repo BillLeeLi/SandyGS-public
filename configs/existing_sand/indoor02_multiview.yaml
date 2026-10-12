@@ -1,0 +1,48 @@
+schema_version: 1
+run: '${SANDYGS_ARTIFACT_ROOT}/existing-sand/indoor02/run_002'
+derived_id: e3_derived_frequency_p050_001
+experiment_id: e3_mv_001
+target_id: e3_mv_targets_s23_001
+seed: 23
+views:
+  - camera_id: frame_00055.jpg
+    crop: [256, 192, 768, 512]
+    completion_id: e3_rgbdepth_frame00055_p050_s23_001
+    initialization_id: e3_init_frame00055_p050_s23_cleanup020_001
+  - camera_id: frame_00097.jpg
+    crop: [256, 128, 768, 512]
+  - camera_id: frame_00139.jpg
+    crop: [192, 192, 768, 512]
+holdout_camera_ids: [frame_00087.jpg, frame_00126.jpg]
+cases:
+  base: {appearance_iters: 100, geometry_iters: 50, joint_iters: 150}
+  geometry100: {appearance_iters: 100, geometry_iters: 100, joint_iters: 150}
+initialization:
+  stride: 4
+  opacity: 0.99
+  duplicate_distance_factor: 0.75
+  # Additional deletion of retained scene points is opt-in. First view reuses
+  # the already reviewed cleanup020 initialization; later views do no cleanup.
+completion:
+  expand_pixels: 8
+  rgb_steps: 20
+  depth_steps: 20
+  guidance_scale: 8.0
+  prompt: >-
+    A flat, unobstructed light beige wooden tabletop. Fine wood grain continues
+    naturally across the restored region, following the same direction and
+    perspective as the surrounding tabletop. Match the surrounding color,
+    texture scale and soft indoor lighting. A clean, continuous wooden surface.
+  negative_prompt: >-
+    sand pile, mound, loose sand, dirt, object, hole, stain, crack, seam,
+    dark blotch, bright white stripe, abrupt change in wood grain
+models:
+  model_python: '${SANDYGS_CACHE_ROOT}/envs/existing-sand-inference/bin/python'
+  infusion_code: '${SANDYGS_CACHE_ROOT}/src/Infusion'
+  infusion_model: '${SANDYGS_DATA_ROOT}/checkpoints/existing-sand/infusion-depth'
+  sdxl_model: '${SANDYGS_DATA_ROOT}/checkpoints/existing-sand/sdxl-inpainting-0.1-fp16'
+loss:
+  lambda_ssim: 0.1
+  lambda_depth: 0.05
+  lambda_normal: 0.02
+snapshot_every: 0

@@ -1,0 +1,2 @@
+# Test-only dependencies. Install after creating the sandygs environment.
+pytest==8.3.5

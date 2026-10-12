@@ -1,0 +1,65 @@
+# M6：持续水入口冲刷湿沙障碍，组合 WaterInlet 和 VelocityRegion。
+name: flush
+
+grid:
+  resolution: [80, 48]
+  spacing: 0.022
+  boundary_width: 1
+
+physics:
+  gravity: 9.81
+  diffusion_rate: 0.0005
+  momentum_exchange_rate: 30000
+  ground_friction: 0.38
+  young_modulus: 60000
+  poisson: 0.25
+  drucker_prager_friction: 0.5
+  enable_sand_internal_force: true
+
+time:
+  water_dt: 0.0025
+  sand_substeps: 3
+  adaptive: true
+  target_cfl: 0.4
+  internal_force_height_fraction: 0.0004
+
+exchange_scheme: implicit
+
+initial:
+  terrain: 0.0
+  sand:
+    combine: max
+    shapes:
+      - {type: box, min: [-0.12, -0.30], max: [0.12, 0.30], height: 0.24}
+      - {type: gaussian, center: [0.28, 0.0], sigma: 0.11, height: 0.20}
+  total_water:
+    type: box
+    min: [-0.82, -0.40]
+    max: [-0.50, 0.40]
+    height: 0.20
+
+sources:
+  - type: water_inlet
+    region:
+      type: box
+      min: [-0.82, -0.35]
+      max: [-0.68, 0.35]
+    height_rate: 0.12
+    velocity: [0.65, 0.0]
+    begin: 0.0
+    end: 0.45
+  - type: velocity_region
+    material: all_water
+    region:
+      type: box
+      min: [-0.82, -0.35]
+      max: [-0.60, 0.35]
+    velocity: [0.65, 0.0]
+    begin: 0.0
+    end: 0.45
+
+run:
+  steps: 220
+  frame_stride: 10
+  diagnostic_snapshots: true
+  write_obj: true

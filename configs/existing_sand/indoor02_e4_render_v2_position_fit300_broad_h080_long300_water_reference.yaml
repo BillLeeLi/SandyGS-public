@@ -1,0 +1,45 @@
+schema_version: 1
+scene_id: indoor02
+render_id: e4_render_v2_position_fit300_broad_h080_long300_water_reference_001
+observation_stage_id: source_fourteen_views_001
+background_stage_id: e4_position_full_fit300_001
+initialization_stage_id: e4_exchange_initial_v2_broad_h080_long300_001
+simulation_id: e4_water_pilot_v2_broad_h080_long300_001
+
+# Reuse the completed broad-water simulation and the same diagnosed cameras
+# and times.  Relative to the accepted terrain-proxy render, this run changes
+# only the depth used to decide whether the Gaussian water layer is in front.
+camera_ids: [frame_00055.jpg, frame_00139.jpg, frame_00126.jpg]
+times_seconds: [0.5, 1.0, 2.0, 3.0]
+base_scene_config: configs/scenes/garden.yaml
+base_render_profile: configs/simulations/garden-p4-layered-sand-water.yaml
+
+surface_render_overrides:
+  sand_geometry_backend: triangle_games
+  sand_triangle_diagonal_mode: checkerboard
+  sand_triangle_boundary_mode: clipped
+  sand_triangle_subdivision_level: 1
+  sand_triangle_coverage_gamma: 1.0
+  sand_triangle_terrain_max_edge_ratio: 4.0
+  sand_plane_depth_stability_fallback: true
+  sand_plane_orientation_recovery: false
+  sand_soft_boundary_guidance: true
+  sand_boundary_fade_height: 0.015
+  sand_physical_reference_depth_recovery: true
+  sand_physical_reference_normal_recovery: true
+  sand_center_trusted_invalid_depth_recovery: true
+  sand_center_trusted_invalid_normal_recovery: true
+
+  # Retain the accepted tabletop proxy. It still decides whether the opaque
+  # layer is terrain or real foreground before water visibility is evaluated.
+  water_depth_bias: 0.002
+  water_terrain_depth_proxy: true
+  water_terrain_proxy_source_tolerance: 0.10
+  water_terrain_proxy_depth_bias: 0.0
+
+  # Rasterize an all-three-vertices-wet physical water mesh on the same camera
+  # rays as PGSR. Only its camera-Z participates in the front/behind test.
+  # Gaussian coverage, normal, thickness and optics remain unchanged.
+  water_physical_reference_depth_recovery: true
+  water_physical_reference_erosion_pixels: 2
+  water_physical_reference_gaussian_coverage_min: 0.5

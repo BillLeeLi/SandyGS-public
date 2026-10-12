@@ -1,0 +1,87 @@
+schema_version: 1
+scene_id: mipnerf360-garden
+profile_id: p3-dry-sand-gaussian-pile
+
+# P3 first isolates opaque sand geometry from P4's water-layer composition.
+# The smooth Gaussian pile has no artificial vertical wall and evolves under
+# the solver's elastoplastic internal force.
+initial:
+  # Describe the desired absolute elevation of terrain+sand.  The preparation
+  # step derives sand=max(sand_surface-terrain, 0), so reconstructed table
+  # parts and paving relief are not blindly added to the top of the pile.
+  sand_surface:
+    type: gaussian
+    center: [0.0, -1.0]
+    sigma: 1.50
+    height: 1.65
+  total_water: 0.0
+
+physics:
+  gravity: 9.81
+  diffusion_rate: 0.0
+  momentum_exchange_rate: 1.0
+  ground_friction: 0.42
+  young_modulus: 75000.0
+  poisson: 0.25
+  drucker_prager_friction: 0.5
+  enable_sand_internal_force: true
+
+exchange_scheme: paper
+
+solver:
+  water_dt: 0.0025
+  sand_substeps: 3
+  steps: 1
+  duration_seconds: 0.04
+  frame_stride: 5
+  target_cfl: 0.45
+  internal_force_height_fraction: 0.0004
+  snapshot_level: render
+
+render:
+  frame_time_seconds: 0.0
+  fps: 30.0
+  free_water_epsilon: 1.0e-6
+  sand_epsilon: 1.0e-5
+
+  # Each active cell becomes a tangent-aligned surfel. At Garden's 0.01171875
+  # spacing, coverage_factor=0.55 gives about 0.00645 tangent sigma.
+  sand_coverage_factor: 0.55
+  sand_normal_thickness_ratio: 0.10
+  sand_max_tangent_scale_ratio: 4.0
+  sand_full_coverage_height: 0.015
+  sand_opacity: 0.995
+  # Sand is an opaque aggregate. These thresholds convert accumulated Gaussian
+  # alpha into geometric pixel coverage, not optical transparency. The wider
+  # interval softens only the sub-pixel silhouette; the interior remains 1.
+  sand_coverage_alpha_low: 0.02
+  sand_coverage_alpha_high: 0.80
+  sand_source_alpha_min: 0.01
+  sand_depth_bias: 0.002
+  sand_depth_softness: 0.005
+  sand_save_debug_maps: true
+  # Fail before P4 if rasterized depth, world normals or material fields violate
+  # the opaque-layer contract.
+  sand_validate_gbuffer: true
+
+  # Colors are sRGB byte values. Saturation is derived from the solver heights
+  # as (pure + mixed) / (pure + mixed + sand).
+  sand_dry_color: [194, 154, 96]
+  sand_wet_color: [112, 82, 52]
+  sand_saturation_dry: 0.0
+  sand_saturation_wet: 0.5
+  sand_dry_roughness: 0.90
+  sand_wet_roughness: 0.45
+  sand_dry_specular: 0.04
+  sand_wet_specular: 0.18
+  sand_exposure: 1.0
+  # Directional light provides readable relief. The normalized diffuse cubemap
+  # adds low-frequency scene color/direction without importing its arbitrary
+  # LDR exposure. All illumination is applied to sand in linear RGB.
+  sand_ambient: 0.18
+  sand_environment_weight: 0.25
+  sand_environment_min: 0.35
+  sand_environment_max: 1.75
+  # A grazing key light exposes the broad Gaussian-pile curvature. The former
+  # near-vertical vector gave 95% of Garden surfels N.L > 0.60 and flattened it.
+  sand_light_direction_sim: [-0.60, -0.50, 0.45]

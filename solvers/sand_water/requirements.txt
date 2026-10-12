@@ -1,0 +1,9 @@
+# Python tools for NPY inspection, diagnostics, plots, and GIF rendering.
+# Optional Python packages for solver snapshot visualization.
+# The C++20/Xmake build dependencies are in xmake.lua.
+#
+# FFmpeg is intentionally not listed here: it is an optional system executable
+# used only for optional MP4 visualization.
+numpy==2.0.2
+matplotlib==3.9.4
+Pillow==11.3.0

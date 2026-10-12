@@ -1,0 +1,247 @@
+schema_version: 1
+scene_id: mipnerf360-garden
+profile_id: p5-cohesion-current-e2
+
+# T2.4 production-geometry variant of the reflection-focused sand-dam experiment.
+# It keeps the identical physics initialization and render schedule, but uses the
+# frozen triangle GaMeS + stable plane depth + physical soft-boundary path.
+# Water is initialized from absolute
+# hydraulic levels without a terrain-relative max-depth cap. Away from the ROI
+# feather and dry reconstructed objects, this makes the initial free surface
+# planar instead of copying small terrain bumps into terrain + capped_depth.
+initial:
+  sand_surface:
+    combine: subtract
+    shapes:
+      - type: box
+        min: [-2.20, -1.05]
+        max: [2.20, -0.45]
+        edge_width: 0.12
+        height: 1.46
+      - type: box
+        min: [-0.32, -1.25]
+        max: [0.32, -0.25]
+        edge_width: 0.08
+        height: 1.46
+
+  # eta(x,y), not water thickness. Keep the downstream free surface at 1.28,
+  # below the reliable low edge of the reconstructed cross brace near z=1.30.
+  # The upstream reservoir is raised to 1.33, restoring a 0.07 hydraulic head
+  # through the dam opening without raising the whole Garden ROI as in the old
+  # 1.35/1.42 experiment. Each side is still initialized as a planar absolute
+  # surface; only the feathered transition near the dam carries a gradient.
+  water_surface:
+    surface:
+      combine: sum
+      shapes:
+        - 1.28
+        - type: box
+          min: [-2.80, -3.20]
+          max: [2.80, -1.05]
+          edge_width: 0.25
+          height: 0.07
+    # Deliberately no max_depth: h=max(eta-terrain,0), so every wet interior
+    # cell reconstructs the requested planar hydraulic level. The soft mask is
+    # retained to keep water inside the central, reliable Garden floor.
+    mask:
+      type: box
+      min: [-3.65, -3.65]
+      max: [3.65, 3.65]
+      edge_width: 0.30
+      height: 1.0
+
+physics:
+  gravity: 9.81
+  diffusion_rate: 0.0
+  momentum_exchange_rate: 1.0
+  ground_friction: 0.3
+  # Ignore only reconstruction-scale paving relief when classifying sand/dry
+  # contact. Real obstacles whose terrain exceeds the sand surface by >0.005
+  # remain closed; water contact uses its original strict condition.
+  sand_terrain_contact_tolerance: 0.005
+  young_modulus: 75000.0
+  poisson: 0.25
+  drucker_prager_friction: 0.5
+  # Control group: explicit solver defaults used by the accepted T2.4 run.
+  cohesion:
+    c0: 0.0
+    c1: 2000.0
+    c2: 1000.0
+  enable_sand_internal_force: true
+
+exchange_scheme: paper
+
+solver:
+  water_dt: 0.0025
+  sand_substeps: 3
+  steps: 1
+  duration_seconds: 2.0
+  frame_stride: 5
+  target_cfl: 0.45
+  internal_force_height_fraction: 0.0004
+  snapshot_level: render
+
+render:
+  frame_time_seconds: 0.0
+  fps: 24.0
+  free_water_epsilon: 1.0e-6
+  sand_epsilon: 1.0e-5
+  # Preserve the pre-debug baseline in this reflection-focused scene. Set to
+  # free_water_masked only for an explicit shoreline-normal A/B experiment.
+  water_normal_gradient_mode: legacy_full
+  render_layered_water: true
+  water_rendering_backend: sandygs_p4
+
+  # Frozen T2.4 production geometry. These switches are explicit so E2 and the
+  # later server video exercise the same path as the recommended regression
+  # baseline instead of silently falling back to legacy cell_tangent surfels.
+  sand_geometry_backend: triangle_games
+  sand_triangle_diagonal_mode: checkerboard
+  sand_triangle_boundary_mode: clipped
+  sand_triangle_subdivision_level: 1
+  sand_triangle_coverage_gamma: 1.0
+  sand_triangle_terrain_max_edge_ratio: 4.0
+  sand_plane_depth_stability_fallback: true
+  sand_plane_orientation_recovery: false
+  sand_soft_boundary_guidance: true
+  sand_boundary_fade_height: 0.015
+
+  # T2.1--T2.3 and T3 diagnostics are deliberately disabled: this profile
+  # validates the final T2.4 production path and avoids diagnostic-only passes.
+  sand_invalid_depth_diagnostics: false
+  sand_triangle_reference_diagnostics: false
+  sand_soft_boundary_diagnostics: false
+  sand_primitive_attribution_diagnostics: false
+  sand_t3_prerequisite_diagnostics: false
+
+  sand_coverage_factor: 0.55
+  sand_normal_thickness_ratio: 0.10
+  sand_max_tangent_scale_ratio: 4.0
+  sand_full_coverage_height: 0.015
+  sand_opacity: 0.995
+  sand_coverage_alpha_low: 0.02
+  sand_coverage_alpha_high: 0.80
+  sand_source_alpha_min: 0.01
+  sand_depth_bias: 0.002
+  sand_depth_softness: 0.005
+  sand_save_debug_maps: true
+  sand_validate_gbuffer: true
+
+  sand_dry_color: [194, 154, 96]
+  sand_wet_color: [182, 145, 90]
+  sand_mixed_water_wetness_dry: 0.0
+  sand_mixed_water_wetness_wet: 0.75
+  sand_dry_roughness: 0.90
+  sand_wet_roughness: 0.45
+  sand_dry_specular: 0.04
+  sand_wet_specular: 0.18
+  sand_exposure: 1.0
+  sand_ambient: 0.18
+  sand_environment_weight: 0.25
+  sand_environment_min: 0.35
+  sand_environment_max: 1.75
+  sand_light_direction_sim: [-0.60, -0.50, 0.45]
+
+  water_coverage_alpha_low: 0.02
+  water_coverage_alpha_high: 0.80
+  water_alpha_min: 0.02
+  water_depth_bias: 0.002
+  water_validate_gbuffer: true
+  # The center-depth fallback changed numerical validity without removing the
+  # visible obstacle-edge fragments, so this controlled appearance profile
+  # keeps the ordinary plane-depth path while the issue remains experimental.
+  water_depth_fallback_mode: none
+  # Keep the current strong reflection floor for the video
+  # comparison; only the physical initialization changes in this profile.
+  water_f0: 0.50
+  water_roughness: 0.05
+  water_ssr_ray_length: 500.0
+  water_ssr_thickness: 0.03
+  water_ssr_start_step: 2
+  water_ssr_frontface_cos_threshold: 0.08
+  water_ssr_backface_cos_threshold: 0.08
+  water_ssr_max_depth_jump_absolute: 0.25
+  water_ssr_max_depth_jump_relative: 0.05
+  water_occluded_proxy_blur_radius: 12
+  water_occluded_proxy_darkness: 0.25
+  water_occluded_proxy_saturation: 0.45
+  water_occluded_proxy_environment_weight: 0.10
+  water_occluded_proxy_roughness: 0.80
+  water_refraction_pixels_per_unit: 40.0
+  water_optical_distance_scale: 1.0
+  water_absorption_rgb: [0.15, 0.055, 0.025]
+  water_scatter_color: [34, 86, 92]
+  water_highlight_strength: 0.35
+  water_highlight_exponent: 48.0
+  water_light_direction_sim: [-0.60, -0.50, 0.45]
+
+phases:
+  e1:
+    solver:
+      duration_seconds: 0.12
+
+  e2:
+    solver:
+      duration_seconds: 0.12
+      frame_stride: 130
+    render:
+      render_schedule:
+        schema_version: 1
+        camera_path: generated_orbit
+        camera_path_frames: 180
+        sequences:
+          - name: fixed_view_local
+            type: fixed_camera
+            camera_index: 0
+            times: [0.0, 0.06, 0.12]
+            debug: all
+            intermediates: debug
+          - name: synchronized_local
+            type: synchronized_multiview
+            camera_indices: [0, 60, 120]
+            times: [0.12]
+            debug: all
+            intermediates: debug
+
+  server:
+    solver:
+      duration_seconds: 2.0
+      frame_stride: 100
+    render:
+      render_schedule:
+        schema_version: 1
+        camera_path: generated_orbit
+        camera_path_frames: 180
+        sequences:
+          - name: fixed_view_000
+            type: fixed_camera
+            camera_index: 0
+            times: {start: 0.0, end: 2.0, fps: 24.0}
+            debug: [0, 24, 48]
+            intermediates: debug
+          - name: fixed_view_060
+            type: fixed_camera
+            camera_index: 60
+            times: {start: 0.0, end: 2.0, fps: 24.0}
+            debug: [0, 24, 48]
+            intermediates: debug
+          - name: fixed_view_120
+            type: fixed_camera
+            camera_index: 120
+            times: {start: 0.0, end: 2.0, fps: 24.0}
+            debug: [0, 24, 48]
+            intermediates: debug
+          - name: synchronized_views
+            type: synchronized_multiview
+            camera_indices: [0, 36, 72, 108, 144]
+            times: [0.0, 0.5, 1.0, 1.5, 2.0]
+            debug: [0, 2, 4]
+            intermediates: debug
+          - name: moving_camera
+            type: moving_camera
+            camera_indices: {start: 0, end: 179, count: 49}
+            times: {start: 0.0, end: 2.0, count: 49}
+            debug: [0, 24, 48]
+            intermediates: debug
+
+

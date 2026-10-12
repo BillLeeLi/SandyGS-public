@@ -1,0 +1,72 @@
+schema_version: 1
+scene_id: indoor02
+render_id: e4_demo_v2_annular_variant003_3s_24fps_texture_001
+observation_stage_id: source_fourteen_views_001
+background_stage_id: e4_position_full_fit300_001
+initialization_stage_id: e4_exchange_initial_v2_annular_variant003_long300_001
+simulation_id: e4_water_pilot_v2_annular_variant003_long300_001
+
+camera_ids: [frame_00055.jpg, frame_00139.jpg, frame_00126.jpg]
+base_scene_config: configs/scenes/garden.yaml
+base_render_profile: configs/simulations/garden-p4-layered-sand-water.yaml
+
+demo:
+  start_time_seconds: 0.0
+  end_time_seconds: 3.0
+  fps: 24.0
+  diagnostic_times_seconds: [0.0, 0.5, 1.0, 2.0, 3.0]
+  video:
+    codec: libx264
+    preset: slow
+    crf: 18
+    pixel_format: yuv420p
+    multiview: true
+
+surface_render_overrides:
+  sand_geometry_backend: triangle_games
+  sand_triangle_diagonal_mode: checkerboard
+  sand_triangle_boundary_mode: clipped
+  sand_triangle_subdivision_level: 1
+  sand_triangle_coverage_gamma: 1.0
+  sand_triangle_terrain_max_edge_ratio: 4.0
+  sand_plane_depth_stability_fallback: true
+  sand_plane_orientation_recovery: false
+  sand_soft_boundary_guidance: true
+  sand_boundary_fade_height: 0.015
+  sand_physical_reference_depth_recovery: true
+  sand_physical_reference_normal_recovery: true
+  sand_center_trusted_invalid_depth_recovery: true
+  sand_center_trusted_invalid_normal_recovery: true
+
+  sand_texture_enabled: true
+  sand_texture_material: texturecan_ground_0024_2k
+  sand_texture_material_mode: texture_primary
+  sand_texture_root: ${SANDYGS_DATA_ROOT}/materials/sand/texturecan/ground_0024_2k/runtime
+  sand_texture_projection: simulation_triplanar
+  sand_texture_triplanar_sharpness: 4.0
+  sand_texture_phase_mode: world_locked
+  sand_texture_period_sim: 0.8
+  sand_texture_rotation_degrees: 0.0
+  sand_texture_offset: [0.0, 0.0]
+  sand_texture_primary_albedo_gain: [1.2, 1.2, 1.2]
+  sand_texture_primary_roughness_scale: 1.0
+  sand_texture_normal_strength: 1.25
+  sand_texture_normal_highpass_enabled: true
+  sand_texture_normal_highpass_sigma_texels: 8.0
+  sand_texture_normal_highpass_strength: 1.0
+  sand_texture_roughness_min: 0.08
+  sand_texture_roughness_max: 1.0
+  sand_texture_lod_bias: -1.0
+  sand_texture_wet_adjustment_enabled: true
+  sand_texture_wet_albedo_scale: 0.70
+  sand_texture_wet_response_rate: 4.0
+  sand_texture_ao_enabled: false
+  sand_texture_diagnostics: true
+
+  water_depth_bias: 0.002
+  water_terrain_depth_proxy: true
+  water_terrain_proxy_source_tolerance: 0.10
+  water_terrain_proxy_depth_bias: 0.0
+  water_physical_reference_depth_recovery: true
+  water_physical_reference_erosion_pixels: 2
+  water_physical_reference_gaussian_coverage_min: 0.5

@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# Local environments and native builds
+.venv/
+.conda/
+build/
+dist/
+.xmake/
+compile_commands.json
+
+# IDE and OS files
+.idea/
+.vscode/
+.DS_Store
+
+# Local datasets, checkpoints, and generated artifacts
+data/
+datasets/
+checkpoints/
+output/
+outputs/
+results/
+artifacts/
+# The imported solver's output/ directory contains C++ source, not run data.
+!solvers/sand_water/output/
+!solvers/sand_water/output/*.cpp
+!solvers/sand_water/output/*.h
+configs/paths.local.yaml
+configs/paths.*.local.yaml
+*.mp4
+*.gif

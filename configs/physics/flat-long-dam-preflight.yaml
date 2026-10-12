@@ -1,0 +1,194 @@
+schema_version: 1
+experiment_id: flat-long-dam-transverse-invariance
+
+# Synthetic control for the vertical-fold investigation. It deliberately uses
+# the lightweight Fig. 4 height-field renderer: no Garden reconstruction, PGSR
+# checkpoint, dynamic Gaussians, or 3DGS rasterizer is loaded.
+solver_scene:
+  name: flat_long_dam_preflight
+
+  grid:
+    # Match the Garden solver spacing so grid-scale modes are comparable while
+    # keeping this flat control much smaller than the 1026^2 Garden domain.
+    resolution: [224, 224]
+    spacing: 0.01171875
+    boundary_width: 1
+    center: [0.0, 0.0]
+
+  # Preserve the Fig. 4-tuned material settings that produced the visible
+  # Garden folds. The first experiment varies geometry/terrain only.
+  physics:
+    gravity: 9.81
+    diffusion_rate: 0.0
+    momentum_exchange_rate: 1.0
+    ground_friction: 0.42
+    sand_terrain_contact_tolerance: 0.0
+    young_modulus: 75000.0
+    poisson: 0.25
+    drucker_prager_friction: 0.45
+    cohesion:
+      c0: 400.0
+      c1: 2000.0
+      c2: 2500.0
+      phi1: 0.20
+      phi2: 0.25
+      phi3: 0.33
+    enable_sand_internal_force: true
+
+  time:
+    water_dt: 0.0025
+    sand_substeps: 3
+    adaptive: true
+    target_cfl: 0.45
+    internal_force_height_fraction: 0.0004
+
+  exchange_scheme: paper
+
+  initial:
+    terrain:
+      type: plane
+      height: 0.0
+      slope: [0.0, 0.0]
+
+    # A 4:1 long rectangular dam. Every interior plateau cell has identical
+    # sand height. The smooth edge is also translation-invariant along the
+    # central part of the long faces, avoiding a hard one-cell stress impulse.
+    sand:
+      type: box
+      min: [-1.00, -0.25]
+      max: [1.00, 0.25]
+      height: 0.32
+      edge_width: 0.10
+
+    # The runner constructs total_water = phi/(1-phi) * sand from the identical
+    # box primitive. Consequently phi is exactly 0.25 wherever sand exists,
+    # including the smooth boundary; there is no free-water reservoir outside.
+    saturation: 0.25
+
+  # The authored baseline is safe: selecting preflight cannot advance physics.
+  run:
+    steps: 0
+    frame_stride: 1
+    diagnostic_snapshots: false
+    write_obj: false
+
+experiment:
+  artifact_subdirectory: comparisons/physics/flat_long_dam
+
+phases:
+  preflight: {}
+
+  # Early-time acceptance only. Saved solver frames are denser than the three
+  # representative rendered rows, so a later diagnostic can inspect every
+  # height field without rerunning this 0.06 s simulation.
+  early:
+    solver_scene:
+      name: flat_long_dam_early
+      run:
+        duration: 0.06
+        frame_stride: 5
+
+  # Accepted long-duration height-field run. Keep the exact dx, material and
+  # initializer used by `early`, but add numerical apron around the finite dam
+  # ends and spreading fronts. Sparse snapshots keep the direct triangulated
+  # preview comfortably below the workstation memory limit.
+  long:
+    solver_scene:
+      name: flat_long_dam_long
+      grid:
+        resolution: [384, 320]
+      run:
+        duration: 1.0
+        frame_stride: 50
+    render:
+      crop_half_extent: 1.65
+
+  # Three single-factor members for a controlled perturbation-growth test.
+  # They intentionally duplicate the accepted long-run settings so selecting
+  # one phase cannot inherit an accidental future change from another phase.
+  perturbation_control:
+    solver_scene:
+      name: flat_long_dam_perturbation_control
+      grid:
+        resolution: [384, 320]
+      run:
+        duration: 1.0
+        frame_stride: 50
+    render:
+      crop_half_extent: 1.65
+    initial_perturbation:
+      kind: control
+      axis: x
+      wavelength: 0.1875
+      amplitude: 0.0
+
+  perturbation_saturation:
+    solver_scene:
+      name: flat_long_dam_perturbation_saturation
+      grid:
+        resolution: [384, 320]
+      run:
+        duration: 1.0
+        frame_stride: 50
+    render:
+      crop_half_extent: 1.65
+    initial_perturbation:
+      kind: saturation_sine
+      axis: x
+      wavelength: 0.1875
+      # Absolute saturation amplitude: phi varies approximately from 0.2475
+      # to 0.2525 (the report records the exact cell-centre extrema).
+      amplitude: 0.0025
+
+  perturbation_height:
+    solver_scene:
+      name: flat_long_dam_perturbation_height
+      grid:
+        resolution: [384, 320]
+      run:
+        duration: 1.0
+        frame_stride: 50
+    render:
+      crop_half_extent: 1.65
+    initial_perturbation:
+      kind: sand_height_sine
+      axis: x
+      wavelength: 0.1875
+      # One-millimetre amplitude on the 0.32-unit dam plateau.
+      amplitude: 0.001
+
+render:
+  subject_label: flat long dam
+  crop_half_extent: 1.16
+  sand_epsilon: 1.0e-8
+  range_height_threshold: 0.001
+  sand_color: [0.76, 0.53, 0.27]
+  ground_color: [0.74, 0.75, 0.73]
+  background_color: [0.96, 0.97, 0.98]
+  # Keep the optional pure-water renderer available in code, but disable it for
+  # the long transverse-invariance experiment so surface shading exposes the
+  # sand geometry without a transparent blue overlay. Mixed water never changes
+  # the sand color in this lightweight renderer.
+  render_free_water: false
+  water_epsilon: 1.0e-6
+  water_color: [0.22, 0.58, 0.78]
+  water_alpha: 0.48
+  water_ambient_strength: 0.58
+  water_diffuse_strength: 0.42
+  light_direction: [-0.45, -0.55, 1.0]
+  ambient_strength: 0.38
+  diffuse_strength: 0.62
+  dpi: 170
+  views:
+    # Front view makes any transverse (x-direction) corrugation easiest to see.
+    - name: front_low
+      elevation: 18.0
+      azimuth: -90.0
+    # Oblique view shows both the uniform plateau and the front face.
+    - name: front_oblique
+      elevation: 28.0
+      azimuth: -55.0
+    # End view checks the intended cross-section and edge smoothing directly.
+    - name: end_oblique
+      elevation: 24.0
+      azimuth: 0.0

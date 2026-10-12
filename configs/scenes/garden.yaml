@@ -1,0 +1,69 @@
+schema_version: 2
+scene_id: mipnerf360-garden
+
+# Every path is relative to a named root from configs/paths.local.yaml.
+# Absolute paths are intentionally rejected by the resolver.
+paths:
+  dataset:
+    root: datasets
+    path: mipnerf360/garden
+    kind: directory
+  checkpoint:
+    root: checkpoints
+    path: pgsr/mipnerf360/garden/release
+    kind: directory
+  low_height_map:
+    root: derived
+    path: rainygs/mipnerf360/garden/height_maps/garden_2.00.npy
+    kind: file
+    required: false
+  high_height_map:
+    root: derived
+    path: rainygs/mipnerf360/garden/height_maps/garden_4.00_refined.npy
+    kind: file
+    required: false
+  p1_exchange:
+    root: derived
+    path: sandygs/mipnerf360/garden/p1-terrain-v1
+    kind: directory
+    required: false
+  p2_pure_water_input:
+    root: derived
+    path: sandygs/mipnerf360/garden/p2-pure-water-smoke/input
+    kind: directory
+    required: false
+  p2_pure_water_run:
+    root: artifacts
+    path: p2/mipnerf360/garden/pure-water-smoke/run
+    kind: directory
+    required: false
+  artifacts:
+    root: artifacts
+    path: p0/mipnerf360/garden
+    kind: directory
+    required: false
+
+# Current SandyGS alignment, camera, environment and water material values.
+# P1 terrain generation consumes the alignment fields; P2--P5 rendering uses
+# the remaining fields without requiring historical SimRain frame resources.
+renderer:
+  dataset_name: garden
+  height_map_range: [-6.0, 6.0, -6.0, 6.0]
+  align_rotation_angles: [241.209, 0.298943, 70.0]
+  align_translation_vector: [0.102286, -0.4026, 4.4]
+  align_scale: [1, 1, 1]
+  is_render_360: true
+  is_sky_model: false
+  is_render_height_map: false
+  is_render_height_map_post: false
+  ortho_cam_z: 6.0
+  low_height_map_z: 2.0
+  high_height_map_z: 3.67
+  height_map_width: 1024
+  height_map_height: 1024
+  brdf_envmap_res: 64
+  diffuse_fluid: [59, 158, 215]
+  opacity_fluid: 1.0
+  scale_fluid: [0.006, 0.006, 0.006]
+  roughness_fluid: 0.05
+  specular_fluid: [0.6, 0.6, 0.6]

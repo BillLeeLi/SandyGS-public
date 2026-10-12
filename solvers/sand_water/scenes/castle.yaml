@@ -1,0 +1,42 @@
+# M6：用 box/cylinder 的 max 组合构造简化沙堡。
+name: castle
+
+grid:
+  resolution: [72, 56]
+  spacing: 0.022
+  boundary_width: 1
+
+physics:
+  gravity: 9.81
+  diffusion_rate: 0.0
+  momentum_exchange_rate: 1.0
+  ground_friction: 0.48
+  young_modulus: 75000
+  poisson: 0.25
+  drucker_prager_friction: 0.55
+  enable_sand_internal_force: true
+
+time:
+  water_dt: 0.0025
+  sand_substeps: 3
+  adaptive: true
+  internal_force_height_fraction: 0.0004
+
+initial:
+  terrain: 0.0
+  sand:
+    combine: max
+    shapes:
+      - {type: box, min: [-0.42, -0.30], max: [0.42, 0.30], height: 0.12}
+      - {type: box, min: [-0.34, -0.22], max: [0.34, 0.22], height: 0.23}
+      - {type: cylinder, center: [-0.34, -0.24], radius: 0.12, height: 0.34, edge_width: 0.022}
+      - {type: cylinder, center: [-0.34, 0.24], radius: 0.12, height: 0.34, edge_width: 0.022}
+      - {type: cylinder, center: [0.34, -0.24], radius: 0.12, height: 0.34, edge_width: 0.022}
+      - {type: cylinder, center: [0.34, 0.24], radius: 0.12, height: 0.34, edge_width: 0.022}
+  total_water: 0.0
+
+run:
+  steps: 160
+  frame_stride: 10
+  diagnostic_snapshots: true
+  write_obj: true
