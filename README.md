@@ -4,6 +4,39 @@ SandyGS combines a PGSR reconstruction with height-field sand–water simulation
 
 This repository contains source code and example configurations. It does not include photographed datasets, trained reconstruction checkpoints, model weights, sand texture maps, solver binaries, simulation snapshots, or rendered videos.
 
+## Results
+
+### indoor02: existing sand in the source scene
+
+The `indoor02` example below uses the same `frame_00055.jpg` camera for the reconstructed scene, prompted sand selection, and completed tabletop.
+
+| Original scene | Selected sand | Completed tabletop |
+|---|---|---|
+| <img src="media/indoor02/source_frame00055.png" alt="PGSR render of sand on the tabletop" width="300"> | <img src="media/indoor02/sam_selection_frame00055.png" alt="SAM selection overlay on the sand pile" width="300"> | <img src="media/indoor02/completed_tabletop_frame00055.png" alt="Optimized tabletop after removing the selected sand" width="300"> |
+
+The textured sand–water simulation below is shown at 1.5 s. The full demo spans 3 s at 24 fps from the same camera.
+
+![Textured sand and water at 1.5 seconds](media/indoor02/demo_frame00055_t1p5.png)
+
+### Garden: manually initialized sand and water
+
+The Garden source scene contains no sand. For this separate physics demo, two sand embankments and an upstream water head were added as initial conditions. The 2 s, 24 fps camera120 view shows the embankments dispersing under the water flow. This example demonstrates sand–water simulation and rendering; it does not use the existing-sand selection, deletion, or background-completion stages shown for `indoor02`.
+
+![Garden sand embankments under upstream water flow at 1 second](media/garden/dam_camera120_t1p0.png)
+
+The playable MP4s for both demos will be embedded here from GitHub video attachments after the public repository is created. The videos are not part of the Git repository.
+
+## Method overview
+
+SandyGS separates the static reconstructed scene from the sand and water that will move. The stages share calibrated cameras and a scene-to-simulation transform, so the recovered surfaces can become physical initial conditions and later be rendered back into the scene.
+
+1. **Select the original sand.** PGSR reconstructs the photographed scene as Gaussians. A user prompts SAM in several calibrated views, then each Gaussian receives in-mask or out-of-mask votes only from views where an approximate PGSR camera-Z check considers it visible. Gaussians without valid votes remain unknown. Held-out views help reveal missing sand or selection leaking onto the support surface.
+2. **Reconstruct the hidden support.** The selected sand Gaussians and their original attributes are saved, then removed from a checkpoint copy. SDXL fills the edited RGB region; InFusion predicts its missing depth using an adapter for PGSR camera-Z depth. These generated images are *pseudo-targets*, not photographs of the hidden tabletop. Completed depth initializes local planar Gaussians, which are fitted with RGB, depth, and normal constraints across complementary views. Extra Gaussians are added conservatively where the fitted surface remains uncovered.
+3. **Build simulation fields.** The original sand top and completed background are rendered through the same simulation-aligned orthographic camera. After reviewing and repairing inconsistent or missing regions, the background height becomes `terrain`, and the nonnegative top-minus-base difference becomes initial `sand_height`. Both are exported on the solver's height-field grid; water is initialized separately.
+4. **Simulate and render.** The coupled height-field solver evolves sand and water. Its snapshots generate dynamic surface Gaussians, which are composited with the completed static PGSR scene. The renderer can apply sand texture and models water reflection, refraction, and absorption while resolving surface coverage and depth for each camera.
+
+The hidden support is an estimate, and the demo has no measured metric scale. It assumes a locally single-valued sand surface and tabletop; the reviewed masks and geometry are not automatically recovered ground truth.
+
 ## Pipeline
 
 | Stage | Main entry points | Output |
