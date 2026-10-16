@@ -16,13 +16,13 @@ The `indoor02` example below uses the same `frame_00055.jpg` camera for the reco
 
 The textured sand–water simulation below is shown at 1.5 s. The full demo spans 3 s at 24 fps from the same camera.
 
-![Textured sand and water at 1.5 seconds](media/indoor02/demo_frame00055_t1p5.png)
+https://github.com/user-attachments/assets/eba6f4f8-9cea-4757-a26c-c20f69903bf8
 
 ### Garden: manually initialized sand and water
 
 The Garden source scene contains no sand. For this separate physics demo, two sand embankments and an upstream water head were added as initial conditions. The 2 s, 24 fps camera120 view shows the embankments dispersing under the water flow. This example demonstrates sand–water simulation and rendering; it does not use the existing-sand selection, deletion, or background-completion stages shown for `indoor02`.
 
-![Garden sand embankments under upstream water flow at 1 second](media/garden/dam_camera120_t1p0.png)
+https://github.com/user-attachments/assets/d0788714-342b-48db-88b6-73a69e87bdcd
 
 The playable MP4s for both demos will be embedded here from GitHub video attachments after the public repository is created. The videos are not part of the Git repository.
 
