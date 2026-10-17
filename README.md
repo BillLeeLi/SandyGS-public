@@ -2,6 +2,8 @@
 
 SandyGS combines a PGSR reconstruction with height-field sand–water simulation. It can select a sand pile in a reconstructed scene, remove its Gaussians, complete the exposed background, convert the recovered sand thickness to a solver initial condition, and render the evolving sand and water with the scene from multiple cameras.
 
+![pipeline](https://github.com/user-attachments/assets/424e1b08-3514-49c3-9089-ead6df350f5f)
+
 This repository contains source code and example configurations. It does not include photographed datasets, trained reconstruction checkpoints, model weights, sand texture maps, solver binaries, simulation snapshots, or rendered videos.
 
 ## Results
